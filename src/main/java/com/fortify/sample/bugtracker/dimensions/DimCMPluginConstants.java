@@ -3,8 +3,6 @@
  */
 package com.fortify.sample.bugtracker.dimensions;
 
-import java.util.*;
-
 /**
  * Constants for using inside the Dimension CM Bugplugin.
  *

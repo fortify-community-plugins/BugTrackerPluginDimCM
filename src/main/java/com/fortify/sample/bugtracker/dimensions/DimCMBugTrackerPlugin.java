@@ -6,32 +6,15 @@ package com.fortify.sample.bugtracker.dimensions;
 import com.fortify.pub.bugtracker.plugin.AbstractBatchBugTrackerPlugin;
 import com.fortify.pub.bugtracker.plugin.BatchBugTrackerPlugin;
 import com.fortify.pub.bugtracker.plugin.BugTrackerPluginImplementation;
-import com.fortify.pub.bugtracker.support.Bug;
-import com.fortify.pub.bugtracker.support.BugParam;
-import com.fortify.pub.bugtracker.support.BugParamChoice;
-import com.fortify.pub.bugtracker.support.BugParamText;
-import com.fortify.pub.bugtracker.support.BugParamTextArea;
-import com.fortify.pub.bugtracker.support.BugSubmission;
-import com.fortify.pub.bugtracker.support.BugTrackerConfig;
-import com.fortify.pub.bugtracker.support.BugTrackerException;
-import com.fortify.pub.bugtracker.support.IssueDetail;
-import com.fortify.pub.bugtracker.support.MultiIssueBugSubmission;
-import com.fortify.pub.bugtracker.support.UserAuthenticationStore;
-
-import com.j2bugzilla.rpc.GetBug;
-import com.serena.dmclient.api.DimensionsObjectFactory;
+import com.fortify.pub.bugtracker.support.*;
 import com.serena.dmclient.api.DimensionsResult;
 import com.serena.dmclient.api.Part;
 import com.serena.dmclient.api.Request;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
@@ -596,7 +579,7 @@ public class DimCMBugTrackerPlugin extends AbstractBatchBugTrackerPlugin impleme
 	@Override
 	public Bug fetchBugDetails(String bugId, UserAuthenticationStore credentials) {
 		final DimCMClient connector = connectToDimensions(credentials);
-		final GetBug getBug = new GetBug(Integer.parseInt(bugId));
+		//final GetBug getBug = new GetBug(Integer.parseInt(bugId));
 		try {
 			LOG.info("Retrieving request " + bugId + " from Dimensions CM");
 			Request request = connector.getRequest(bugId);

@@ -1,5 +1,15 @@
 package com.fortify.sample.bugtracker.dimensions;
 
+import com.serena.dmclient.api.*;
+import com.serena.dmclient.api.Filter.Criterion;
+import com.serena.dmclient.collections.Types;
+import com.serena.dmclient.objects.*;
+import merant.adm.dimensions.objects.core.AdmAttrNames;
+import merant.adm.dimensions.objects.core.AdmObject;
+import merant.adm.exception.AdmObjectException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -8,31 +18,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.serena.dmclient.api.*;
-import com.serena.dmclient.collections.Products;
-import com.serena.dmclient.collections.Types;
-import com.serena.dmclient.objects.*;
-import merant.adm.dimensions.cmds.AdmCmd;
-import merant.adm.dimensions.cmds.helper.IDeploymentViewConstants;
-import merant.adm.dimensions.cmds.helper.RangeInfo;
-import merant.adm.dimensions.cmds.interfaces.CmdArguments;
-import merant.adm.dimensions.cmds.interfaces.Relatable;
-import merant.adm.dimensions.objects.BaseDatabase;
-import merant.adm.dimensions.objects.DeploymentHistoryRecord;
-import merant.adm.dimensions.objects.DeploymentViewContext;
-import merant.adm.dimensions.objects.collections.FilterCriterion;
-import merant.adm.dimensions.objects.core.AdmAttrNames;
-import merant.adm.dimensions.objects.core.AdmObject;
-import merant.adm.dimensions.objects.userattrs.FilterImpl;
-import merant.adm.exception.AdmException;
-import merant.adm.exception.AdmObjectException;
-import merant.adm.framework.Cmd;
-
-import com.serena.dmclient.api.Filter.Criterion;
-import com.serena.dmclient.collections.BuildStages;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 public class DimCMClient {
     private static final Log LOG = LogFactory.getLog(DimCMClient.class);
