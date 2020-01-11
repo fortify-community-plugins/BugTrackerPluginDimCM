@@ -1,0 +1,71 @@
+// Example gradle script to show how a bug tracker plugin can be build
+
+apply plugin: 'java'
+apply plugin: 'osgi'
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+version = '19.2.0.3163'
+
+configurations {
+    bundle
+}
+
+dependencies {
+    compile fileTree(dir: 'lib')
+    bundle fileTree(dir: 'lib', exclude: 'fortify-public*.jar')
+}
+
+jar.enabled = false // We don't need to generate a default non-osgi jar during build
+
+clean {
+    delete "${projectDir}/dist"
+}
+
+def bundleClassPath() {
+    def list = ['.']
+    configurations.bundle.findAll {
+        !it.name.contains('source-') && !it.name.contains('javadoc-')
+    }.sort{ it.name }.each {
+        list += 'lib/' + it.name
+    }
+    return list.join(',')
+}
+
+ext {
+    pluginManifest = osgiManifest {
+        classesDir = sourceSets.main.java.outputDir //sourceSets.main.output.classesDir
+        classpath = configurations.bundle
+
+        instructionReplace 'Bundle-Name', '%Bundle-Name'
+        instruction 'Bundle-Vendor', '%Bundle-Vendor'
+        instruction 'Bundle-ActivationPolicy', 'lazy'
+        instruction 'Bundle-Localization', 'plugin'
+        instruction 'Bundle-RequiredExecutionEnvironment', 'JavaSE-1.8'
+        instruction 'Built-By', 'Fortify'
+        instruction 'Version', project.version
+        instruction 'Bundle-ClassPath', bundleClassPath()
+
+        instructionReplace 'Bundle-SymbolicName', 'com.fortify.sample.bugtracker.dimensions.DimCMBugTrackerPlugin;singleton:=true'
+        instructionReplace 'Bundle-Version', project.version
+        instructionReplace 'Require-Bundle', 'com.fortify.common.public-api'    // Needed by AWB
+        instructionReplace 'Import-Package', '!*'   // ..suppress the bndTools default import generation
+        instructionReplace 'Export-Package', 'com.fortify.sample.bugtracker.dimensions'
+    }
+}
+
+task pluginJar(type: Jar) {
+    baseName "com.fortify.sample.bugtracker.dimensions.DimCMBugTrackerPlugin"
+	from sourceSets.main.output
+    destinationDir = file("${projectDir}/dist")
+    manifest = pluginManifest
+    from(projectDir) {
+        include "plugin.properties"
+        include "plugin.xml"
+    }
+    into("lib") {
+        from configurations.bundle.files
+        include "*.jar"
+    }
+}
+
+build.dependsOn(pluginJar)

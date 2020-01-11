@@ -1,0 +1,135 @@
+Fortify Software Security Center and AWB Extension Sample : Dimensions CM Defect Tracking Integration
+
+
+-------------
+ABOUT
+-------------
+SSC is distributed with two variants of ALM, Bugzilla, Jira7 and TFS bug tracker plugins:
+  a) Pre-built bug tracker plugins in /plugins folder inside SSC Server zip file for their immediate installation and usage
+  b) Bug tracker plugin sources in /Samples folder inside SSC Server zip file that can be manually built
+       - either without any change (you should get jars with the same functionality as in (a) )
+       - or you can modify the original Fortify plugin sources
+       - or you can create a completely new plugin taking the original ones as an example
+
+Beginning with SSC version 17.20, the same final plugin jars are used for Fortify Software Security Center (SSC)
+and/or for Audit Workbench (AWB).
+
+The bug tracker plugin interface exists as an extension point to allow end users customizing their integration
+between SSC/AWB and external defect tracking systems and then to use SSC or AWB GUIs to easily push the found defects there.
+User's requests are delegated to the SSC server or to AWB from where appropriate calls to the external defect tracking
+systems are submitted.
+
+This sample demonstrates how to implement, build and deploy an additional bug tracker plugin for Micro Focus Dimensions CM.
+
+
+------------------
+KNOWN LIMITATIONS
+------------------
+Dimensions CM Plugin uses the Java API so does not currently support proxies.
+
+
+-------------
+REQUIREMENTS
+-------------
+
+Building the sample extension requires JDK 1.8 and Gradle 4.x to be installed on the building machine.
+
+
+-------------
+BUILDING
+-------------
+
+To build the Dimenions CM bug tracker sample, simply run from the sample root directory:
+
+  > gradle clean build
+
+If you have not changed anything a new
+    "com.fortify.sample.bugtracker.dimensions.DimCMBugTrackerPlugin-xx.yy.jar"
+should be generated in sample's ../dist folder as a result.
+
+For more information how to implement plugin see plugin's interface JavaDoc and SSC documentation.
+Bug tracker plugin public interface is distributed in sample's ../lib/fortify-public-[version].jar library.
+
+
+-----------------
+DEPLOYING IN SSC
+-----------------
+Bug tracker plugin can either replace one of the current installed plugins, or can be added as a new plugin.
+
+Replacing a current bug tracker plugin in SSC
+=============================================
+1. Start SSC, switch to Administration page
+2. Go to the menu <Plugins> -> <Bug Tracking>
+3. Disable and remove a plugin you want to replace
+4. Submit adding a new bug tracker
+5. In the following "Upload Plugin Bundle" dialog navigate to the ../dist dir and select
+   com.fortify.sample.bugtracker.dimensions.DimCMBugTrackerPlugin-xx.yy.jar you've just built
+6. Save your changes, enable the installed plugin and start using it
+
+IMPORTANT NOTE:
+If you have had the just replaced plugin already configured for some application versions and you want the new plugin
+to serve for previously reported bugs, the full name of the new bug tracker implementation class must be exactly the same
+as the previous one.
+In case of the Fortify original Dimenions CM plugin it is
+    "com.fortify.sample.bugtracker.dimensions.DimCMBugTrackerPlugin"
+The same class name also has to be set in [plugin.xml -> bugtracker class].
+
+Installing a new bug tracker plugin in SSC
+==========================================
+1. Start SSC, switch to Administration page
+2. Go to the menu <Plugins> -> <Bug Tracking>
+3. Submit adding a new bug tracker
+4. In the "Upload Plugin Bundle" dialog navigate to the ../dist folder and select
+   a new custom plugin jar you've just built
+5. Save your changes, enable the installed plugin and start using it
+
+Getting more information about bug tracker plugins
+==================================================
+See the corresponding SSC documentation for more detailed information about:
+  - adding/removing BT plugins
+  - enabling/disabling BT plugins
+  - configuring BT plugins for application versions
+  - setting up and using a central SSC proxy with a BT plugin (new in SSC 18.x)
+  - using an enhanced "proxy aware" BT plugin API in custom BT plugin implementations (new in SSC 18.x)
+
+IMPORTANT NOTES to plugins versioning:
+======================================
+1) The pair consisting of
+     - plugin symbolic bundle name [MANIFEST.MF -> Bundle-SymbolicName]
+     - bundle version [MANIFEST.MF -> Bundle-Version]
+   must be unique among all other installed plugins, otherwise the plugin installation fails.
+   (Note: this is by OSGi specification)
+2) The pair consisting of
+     - full name of the bug tracker implementation class [plugin.xml -> bugtracker class]
+     - plugin version [MANIFEST.MF -> Version]
+   must be unique among all other installed plugins, otherwise the plugin installation fails.
+   Also, if you are installing a new plugin version of plugin that is already present in SSC,
+   you have to give it a higher plugin version, otherwise SSC will refuse the installation.
+   See also the next paragraph (3)
+   (Note: this is by SSC design)
+3) You can change the plugin version number in gradle script if you need to.
+   Plugin version has a format major[.minor[.micro[.qualifier]]] , where all parts can be be numbers only.
+   The exact constraint regex is "\d{1,9}(\.\d{1,9}(\.\d{1,9}(\.\d{1,19})?)?)?"
+   For the versions comparison the version parts are converted to numbers
+   (so for example 3.00148 is higher than 3.025)
+4) Version as a part of the bug tracker plugin file name (for example com.fortify.SomePlugin-18.10.jar)
+   is neither taken nor used internally as a plugin metadata and has only an informative value.
+   So if you for example only rename the jar file from ..SomePlugin-18.10.jar to ..SomePlugin-33.444.jar,
+   the internal SSC plugin version still remains 18.10, exactly how it is defined in plugin's MANIFEST.MF.
+
+
+-----------------
+DEPLOYING IN AWB
+-----------------
+
+Copy the new or modified plugin jar from ../dist folder to
+    <SCA_and_Apps>/Core/private-bin/awb/eclipse/plugins/
+and issue an 'eclipse -clean -initialize' command in the 'eclipse' folder.
+
+
+-------------
+USING
+-------------
+
+Edit your application version profile within Software Security Center and configure/enable bug tracker plugin integration.
+Then you can start directly filing issues from this application version as bugs to the external bug tracker provider.
