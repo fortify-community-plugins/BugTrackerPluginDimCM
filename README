@@ -132,4 +132,8 @@ USING
 -------------
 
 Edit your application version profile within Software Security Center and configure/enable bug tracker plugin integration.
-Then you can start directly filing issues from this application version as bugs to the external bug tracker provider.
+    - You can specify the "Bug URL Deep Link" as a Dimensions Pulse or Web URL link - the values %DBNAME%, %DBNAME%
+      and%BUG_ID% will be replaced with actuals values at submission time.
+Create a Bug Filing Template for submission (in Administration->Templates->Bug Filing) - you can copy the JIRA template
+as an example but name the fields "Title" and "Description".
+Then you can start directly filing issues from this application version as bugs to the Dimensions CM provider.

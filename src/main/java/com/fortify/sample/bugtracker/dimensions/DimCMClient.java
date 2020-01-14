@@ -1,3 +1,6 @@
+/**
+ * (c) Copyright [2020] Micro Focus or one of its affiliates.
+ */
 package com.fortify.sample.bugtracker.dimensions;
 
 import com.serena.dmclient.api.*;
@@ -32,24 +35,6 @@ public class DimCMClient {
     private static final String DIMCM_DEFAULT_LIFECYCLE = "LC_DM_STAGE";
 
     private static final SimpleDateFormat DIMCM_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'kk:mm:ss.SSS'Z'");
-
-    private static final Comparator<AdmObject> AMD_OBJ_BY_DATE_COMPARATOR = new Comparator<AdmObject>() {
-        @Override
-        public int compare(AdmObject o1, AdmObject o2) {
-            try {
-                String dateStr1 = o1.getAttrValue(AdmAttrNames.HISTORY_EVENT_DATE).toString();
-                String dateStr2 = o2.getAttrValue(AdmAttrNames.HISTORY_EVENT_DATE).toString();
-                Date d1 = DIMCM_DATE_FORMAT.parse(dateStr1);
-                Date d2 = DIMCM_DATE_FORMAT.parse(dateStr2);
-                return d2.compareTo(d1); // INVERSED ORDER! - we need latest date first
-            } catch (AdmObjectException e) {
-                e.printStackTrace();
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            return 0;
-        }
-    };
 
     public enum GetOptions {
         PROJECTS_AND_STREAMS, STREAMS, PROJECTS
@@ -107,12 +92,10 @@ public class DimCMClient {
             }
             throw e;
         }
-        System.out.println("Connection established");
     }
 
     public List<String> getProducts() {
         DimensionsObjectFactory factory = connection.getObjectFactory();
-        @SuppressWarnings("unchecked")
         List<Product> products = factory.getBaseDatabase().getProducts();
 
         List<String> res = new ArrayList<String>();
@@ -155,11 +138,11 @@ public class DimCMClient {
         return res;
     }
 
+    @SuppressWarnings("unchecked")
     public List<Part> getDesignPartAsList(String productName, String partName) {
         if (partName.contains(":")) partName = partName.replace(productName+":","");
         if (partName.contains(".")) partName = partName.replace(".A;1", "");
         DimensionsObjectFactory factory = connection.getObjectFactory();
-        @SuppressWarnings("unchecked")
         Product product = factory.getBaseDatabase().getProduct(productName);
         Filter filter = new Filter();
         List<Filter.Criterion> criteria = filter.criteria();
@@ -170,9 +153,9 @@ public class DimCMClient {
         return product.getParts(filter);
     }
 
+    @SuppressWarnings("unchecked")
     public List<String> getDesignParts(String productName) {
         DimensionsObjectFactory factory = connection.getObjectFactory();
-        @SuppressWarnings("unchecked")
         Product product = factory.getBaseDatabase().getProduct(productName);
         Filter filter = new Filter();
         List<Part> parts = product.getParts(null);
@@ -184,9 +167,9 @@ public class DimCMClient {
         return res;
     }
 
+    @SuppressWarnings("unchecked")
     public List<String> getReqTypes(String productName) {
         DimensionsObjectFactory factory = connection.getObjectFactory();
-        @SuppressWarnings("unchecked")
         Product product = factory.getBaseDatabase().getProduct(productName);
         Types reqTypes = product.getRequestTypes();
 
@@ -199,15 +182,13 @@ public class DimCMClient {
         return res;
     }
 
+    @SuppressWarnings("unchecked")
     public List<String> getFieldValues(String fieldName) {
         DimensionsObjectFactory factory = connection.getObjectFactory();
-        @SuppressWarnings("unchecked")
         List<AttributeDefinition> attributeDefinitions = factory.getBaseDatabase().getAttributeDefinitions(Request.class, AttributeType.SFSV);
 
         List<String> res = new ArrayList<String>();
-        Iterator it = attributeDefinitions.iterator();
-        while (it.hasNext()) {
-            AttributeDefinition attr = (AttributeDefinition) it.next();
+        for (AttributeDefinition attr : attributeDefinitions) {
             if (attr.getName().equals(fieldName.toUpperCase())) {
                 ValidSet validSet = attr.getValidSet();
                 List<ValidSetRowDetails> values = validSet.getValues();
@@ -220,16 +201,15 @@ public class DimCMClient {
         return res;
     }
 
+    @SuppressWarnings("unchecked")
     public List<String> getRoleUsers(String productName, String roleName) {
         DimensionsObjectFactory factory = connection.getObjectFactory();
-        @SuppressWarnings("unchecked")
         Product product = factory.getBaseDatabase().getProduct(productName);
         List roleAssignments = product.getRoleAssignments();
 
         List<String> res = new ArrayList<String>();
-        Iterator it = roleAssignments.iterator();
-        while (it.hasNext()) {
-            RoleAssignmentDetails rad = (RoleAssignmentDetails) it.next();
+        for (Object roleAssignment : roleAssignments) {
+            RoleAssignmentDetails rad = (RoleAssignmentDetails) roleAssignment;
             if (rad.getRoleName().equals(roleName.toUpperCase())) {
                 res.add(rad.getUserName());
             }
@@ -275,8 +255,7 @@ public class DimCMClient {
             }
         }
 
-        DimensionsResult result = factory.createRequest(requestDetails);
-        return result;
+        return factory.createRequest(requestDetails);
 
     }
 
@@ -323,8 +302,7 @@ public class DimCMClient {
 
     private static Project getProjectIfExists(DimensionsObjectFactory factory, String projectFullName) {
         try {
-            Project p = factory.getProject(projectFullName);
-            return p;
+            return factory.getProject(projectFullName);
         } catch (DimensionsRuntimeException e) {
             throw new RuntimeException("Error: the specified Project is not found!", e);
         }
@@ -332,8 +310,7 @@ public class DimCMClient {
 
     private static Project getProjectIfExists(DimensionsObjectFactory factory, String projectFullName, boolean throwIfNull) {
         try {
-            Project p = factory.getProject(projectFullName);
-            return p;
+            return factory.getProject(projectFullName);
         } catch (DimensionsRuntimeException e) {
             if (throwIfNull) {
                 throw new RuntimeException("Error: the specified Project is not found!", e);
@@ -343,7 +320,6 @@ public class DimCMClient {
     }
 
     private static boolean isProductExists(DimensionsObjectFactory factory, String productName) {
-        @SuppressWarnings("unchecked")
         List<Product> list = factory.getBaseDatabase().getProducts();
         for (Product product : list) {
             if (product.getName().equals(productName)) {
@@ -362,8 +338,8 @@ public class DimCMClient {
     private static List<String> getLifeCycleStages(DimensionsObjectFactory factory) {
         List<String> res = new ArrayList<String>();
         Lifecycle lc = factory.getBaseDatabase().getLifecycle(DIMCM_DEFAULT_LIFECYCLE);
-        for (Iterator<?> i = lc.getNormalStates().iterator(); i.hasNext(); ){
-            res.add(i.next().toString());
+        for (Object o : lc.getNormalStates()) {
+            res.add(o.toString());
         }
         return res;
     }
@@ -432,32 +408,27 @@ public class DimCMClient {
     }
 
 
-
     // ========================================================================
     // Example invocation
     // ========================================================================
     public static void main(final String[] args) {
         DimCMClient cmClient = new DimCMClient();
-        cmClient.connect("dmsys", "dmsys", "cm_typical", "dimcm", "wins2016srg");
-        String bugUrl = "?jsp=api&command=opencd&DB_CONN=%DBCONN%&DB_NAME=%DBNAME%&object_id=";
-        bugUrl = bugUrl.replace("%DBCONN%", "abcedf");
-        System.out.println(bugUrl);
-        //System.out.println(cmClient.getProjectsStreams("QLARIUS"));
-        //System.out.println(cmClient.getDesignParts("QLARIUS"));
-        //List <Part> parts = cmClient.getDesignPartAsList("QLARIUS", "QLARIUS:WEBSITE.A;1");
-        //for (Part p : parts) {
-        //    System.out.println(p.getAttribute(SystemAttributes.OBJECT_ID));
-        //}
-        //System.out.println(cmClient.getFieldValues("SEVERITY"));
-        //System.out.println(cmClient.getRoleUsers("JWA", "DEVELOPER"));
-
-        //DimensionsResult result = cmClient.createRequest("QLARIUS", "MAINLINE_JAVA_STR", parts, "TASK",
-        //        "this is the summary", "this is the description", "High", "JOSH", "");
-        //System.out.println(cmClient.getResultMessage(result));
-        //System.out.println(">"+cmClient.getRequestIdFromResult(result, "QLARIUS", "TASK")+"<");
-        //List<String> users = new ArrayList<>();
-        //users.add("JOSH");
-        //cmClient.delegateRequest("QLARIUS_TASK_23", users, "DEVELOPER", "S");
+        cmClient.connect("dmsys", "", "cm_typical", "dimcm", "wins2016srg");
+        System.out.println(cmClient.getProjectsStreams("QLARIUS"));
+        System.out.println(cmClient.getDesignParts("QLARIUS"));
+        List <Part> parts = cmClient.getDesignPartAsList("QLARIUS", "QLARIUS:WEBSITE.A;1");
+        for (Part p : parts) {
+            System.out.println(p.getAttribute(SystemAttributes.OBJECT_ID));
+        }
+        System.out.println(cmClient.getFieldValues("SEVERITY"));
+        System.out.println(cmClient.getRoleUsers("QLARIUS", "DEVELOPER"));
+        DimensionsResult result = cmClient.createRequest("QLARIUS", "MAINLINE_JAVA_STR", parts,
+                "TASK", "this is the summary", "this is the description",
+                "High", "JOSH", "");
+        String requestId = cmClient.getRequestIdFromResult(result, "QLARIUS", "TASK");
+        List<String> users = new ArrayList<>();
+        users.add("JOSH");
+        cmClient.delegateRequest(requestId, users, "DEVELOPER", "SECONDARY");
     }
 }
 
