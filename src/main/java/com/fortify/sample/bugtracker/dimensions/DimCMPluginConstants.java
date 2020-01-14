@@ -63,6 +63,17 @@ final class DimCMPluginConstants {
 	public static final String DIMCM_BUG_URL_DESCRIPTION = "Templated link to Dimensions Request in Pulse (default) or Web Client.";
 	//public static final String DIMCM_BUG_URL_DEFAULT_VALUE = "http://localhost:8080/dimensions?jsp=api&command=opencd&DB_CONN=%DBCONN%&DB_NAME=%DBNAME%&object_id=%BUG_ID%";
 	public static final String DIMCM_BUG_URL_DEFAULT_VALUE = "http://localhost:8080/pulse/agile.html#/suites/1/products/1/requests/%BUG_ID%";
+
+	public static final String DIMCM_CLOSED_STATES_CONFIG_NAME = "dimCmClosedStates";
+	public static final String DIMCM_CLOSED_STATES_LABEL = "Closed State";
+	public static final String DIMCM_CLOSED_STATES_DESCRIPTION = "List of request states for a closed request";
+	public static final String DIMCM_CLOSED_STATES_DEFAULT_VALUE = "REJECTED,CLOSED";
+
+	public static final String DIMCM_SSC_COMMENTS_FIELD_CONFIG_NAME = "dimCmSscCommentsField";
+	public static final String DIMCM_SSC_COMMENTS_LABEL = "SSC Comments Field Name";
+	public static final String DIMCM_SSC_COMMENTS_DESCRIPTION = "The field name of a Dimmensions CM text field to updated with SSC comments";
+	public static final String DIMCM_SSC_COMMENTS_DEFAULT_VALUE = "SSC_COMMENTS";
+
 	public static final String DIMCM_USERNAME_CONFIG_NAME = "dimCmUsername";
 	public static final String DIMCM_USERNAME_LABEL = "Dimensions CM User Name";
 	public static final String DIMCM_USERNAME_DESCRIPTION = "Dimensions CM User Name";

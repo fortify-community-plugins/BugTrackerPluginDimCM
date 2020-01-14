@@ -202,6 +202,21 @@ public class DimCMClient {
     }
 
     @SuppressWarnings("unchecked")
+    public int getFieldId(String fieldName) {
+        DimensionsObjectFactory factory = connection.getObjectFactory();
+        List<AttributeDefinition> attributeDefinitions = factory.getBaseDatabase().getAttributeDefinitions(Request.class, AttributeType.SFSV);
+
+        List<String> res = new ArrayList<String>();
+        for (AttributeDefinition attr : attributeDefinitions) {
+            if (attr.getName().equals(fieldName.toUpperCase())) {
+                return attr.getNumber();
+            }
+        }
+
+        return 0;
+    }
+
+    @SuppressWarnings("unchecked")
     public List<String> getRoleUsers(String productName, String roleName) {
         DimensionsObjectFactory factory = connection.getObjectFactory();
         Product product = factory.getBaseDatabase().getProduct(productName);
@@ -381,7 +396,7 @@ public class DimCMClient {
     }
 
     @SuppressWarnings("unused") //Debug utility
-    private static void viewAttributes(DimensionsArObject obj, int... attr_id) {
+    public static void viewAttributes(DimensionsArObject obj, int... attr_id) {
         System.out.println("Attributes for " + obj.getName());
         for (int i : attr_id) {
             System.out.println(i);
@@ -412,16 +427,25 @@ public class DimCMClient {
     // Example invocation
     // ========================================================================
     public static void main(final String[] args) {
+
         DimCMClient cmClient = new DimCMClient();
-        cmClient.connect("dmsys", "", "cm_typical", "dimcm", "wins2016srg");
+        cmClient.connect("dmsys", "Pa55w0rd", "cm_typical", "dimcm", "localhost");
+        int sscFieldId = cmClient.getFieldId("SSC_COMMENTS");
+        Request request = (Request) cmClient.getRequest("QLARIUS_TASK_21");
+        request.queryAttribute(new int[]{SystemAttributes.TITLE, SystemAttributes.DESCRIPTION, sscFieldId});
+        String sscComments = (String)request.getAttribute(SystemAttributes.DESCRIPTION);
+        System.out.println(sscComments);
+        String newComments = "I have been updated\n" + sscComments;
+        request.setAttribute(SystemAttributes.DESCRIPTION, newComments);
+        request.updateAttribute(SystemAttributes.DESCRIPTION);
+        System.exit(0);
         System.out.println(cmClient.getProjectsStreams("QLARIUS"));
         System.out.println(cmClient.getDesignParts("QLARIUS"));
         List <Part> parts = cmClient.getDesignPartAsList("QLARIUS", "QLARIUS:WEBSITE.A;1");
         for (Part p : parts) {
             System.out.println(p.getAttribute(SystemAttributes.OBJECT_ID));
         }
-        System.out.println(cmClient.getFieldValues("SEVERITY"));
-        System.out.println(cmClient.getRoleUsers("QLARIUS", "DEVELOPER"));
+        // create a new request
         DimensionsResult result = cmClient.createRequest("QLARIUS", "MAINLINE_JAVA_STR", parts,
                 "TASK", "this is the summary", "this is the description",
                 "High", "JOSH", "");
@@ -429,6 +453,18 @@ public class DimCMClient {
         List<String> users = new ArrayList<>();
         users.add("JOSH");
         cmClient.delegateRequest(requestId, users, "DEVELOPER", "SECONDARY");
+        // get the request
+        Request requestObj = (Request) cmClient.getRequest(requestId);
+        int solutionFieldId = cmClient.getFieldId("DETAILS_OF_THE_SOLUTION");
+        requestObj.queryAttribute(new int[]{SystemAttributes.TITLE,
+                SystemAttributes.DESCRIPTION,
+                SystemAttributes.OBJECT_SPEC,
+                SystemAttributes.STATUS,
+                solutionFieldId});
+        System.out.println("REQUEST_ID : " + requestObj.getAttribute(SystemAttributes.OBJECT_ID));
+        System.out.println("TITLE     : "  + requestObj.getAttribute(SystemAttributes.TITLE));
+        System.out.println("STATUS    : "  + requestObj.getLcState());
+        System.out.println("SOLUTION  : "  + requestObj.getAttribute(solutionFieldId));
     }
 }
 

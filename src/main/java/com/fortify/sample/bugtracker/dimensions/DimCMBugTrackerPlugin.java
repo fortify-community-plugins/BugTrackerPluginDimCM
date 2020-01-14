@@ -9,6 +9,9 @@ import com.fortify.pub.bugtracker.plugin.BugTrackerPluginImplementation;
 import com.fortify.pub.bugtracker.support.*;
 import com.serena.dmclient.api.DimensionsResult;
 import com.serena.dmclient.api.Part;
+import com.serena.dmclient.api.Request;
+import com.serena.dmclient.api.SystemAttributes;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -46,8 +49,38 @@ public class DimCMBugTrackerPlugin extends AbstractBatchBugTrackerPlugin impleme
 	private String cmOwnerCapabilities;
 	private String cmBugUrl;
 	private String cmResolutionField;
-	private Map<String, String> config; // Full Dimensions CM plugin configuration
+	private String cmSscCommentsField;
+	private Map<String, String> config;
 
+	private enum BugParamType {
+		SINGLE_SELECT,
+		MULTI_SELECT,
+		TEXT
+	}
+
+	private enum BugState{
+		RAISED("RAISED"),
+		ASSIGNED("ASSIGNED"),
+		UNDER_WORK("UNDER_WORK"),
+		IN_REVIEW("IN_REVIEW"),
+		IN_TEST("IN_TEST"),
+		COMPLETE("COMPLETE"),
+		CLOSED("CLOSED"),
+		REJECTED("REJECTED");
+
+		final private String value;
+		BugState(final String value) {
+			this.value = value;
+		}
+		public String getValue() {
+			return value;
+		}
+
+		@Override
+		public String toString() {
+			return this.getValue();
+		}
+	}
 
 	@Override
 	public List<BugParam> getBatchBugParameters(UserAuthenticationStore credentials) {
@@ -267,54 +300,70 @@ public class DimCMBugTrackerPlugin extends AbstractBatchBugTrackerPlugin impleme
 
 	@Override
 	public boolean isBugOpen(Bug bug, UserAuthenticationStore credentials) {
-		return !isBugClosed(bug, credentials);
+		LOG.info("isBugOpen: " + bug.getBugId() + "-" + bug.getBugStatus());
+		String bugStatus = bug.getBugStatus();
+		return bugStatus.equals(BugState.RAISED.toString())
+				|| bugStatus.equals(BugState.ASSIGNED.toString())
+				|| bugStatus.equals(BugState.UNDER_WORK.toString())
+				|| bugStatus.equals(BugState.IN_REVIEW.toString())
+				|| bugStatus.equals(BugState.IN_TEST.toString());
 	}
 
 	@Override
 	public boolean isBugClosed(Bug bug, UserAuthenticationStore credentials) {
-		return isBugClosed(bug);
+		LOG.info("isBugClosed: " + bug.getBugId() + "-" + bug.getBugStatus());
+		String bugStatus = bug.getBugStatus();
+		return bugStatus.equals(BugState.REJECTED.toString())
+				|| bugStatus.equals(BugState.CLOSED.toString())
+				|| bugStatus.equals(BugState.CLOSED.toString());
 	}
 
 	@Override
 	public boolean isBugClosedAndCanReOpen(Bug bug, UserAuthenticationStore credentials) {
-		return isBugClosed(bug) && canReOpenBug(bug);
-	}
-
-	private boolean isBugClosed(Bug bug) {
-		String status = bug.getBugStatus();
-		boolean retval = false;
-		for (CLOSED_STATUS cs : CLOSED_STATUS.values()){
-			if (cs.name().equals(status)) {
-				retval = true;
-				break;
-			}
-		}
-		return retval;
+		LOG.info("isBugClosedAndCanReOpen: " + bug.getBugId() + "-" + bug.getBugStatus());
+		String bugStatus = bug.getBugStatus();
+		return bugStatus.equals(BugState.IN_REVIEW.toString())
+				|| bugStatus.equals(BugState.IN_TEST.toString());
 	}
 
 	@Override
 	public void reOpenBug(Bug bug, String comment, UserAuthenticationStore credentials) {
-		LOG.info("Trying to reopen Bug " + bug.getBugId() + " but not currently supported");
-		/*if (!canReOpenBug(bug)) {
-			throw new BugTrackerException("Bug " + bug.getBugId() + " cannot be reopened.");
-		}*/
-	}
-
-	private boolean canReOpenBug(Bug bug) {
-		String resolution = bug.getBugResolution();
-		boolean retval = true;
-		for (NON_REOPENABLE_RESOLUTION rr : NON_REOPENABLE_RESOLUTION.values()){
-			if (rr.name().equals(resolution)) {
-				retval = false;
-				break;
-			}
+		LOG.info("reOpenBug: " + bug.getBugId() + "-" + bug.getBugStatus() + ":" + comment);
+		try {
+			final DimCMClient cmClient = new DimCMClient();
+			cmClient.connect(credentials.getUserName(), credentials.getPassword(), cmDbName, cmDbCon, cmServer);
+			Request request = cmClient.getRequest(bug.getBugId());
+			request.actionTo(BugState.UNDER_WORK.toString());
+			int sscFieldId = cmClient.getFieldId(cmSscCommentsField);
+			request.setAttribute(sscFieldId, comment);
+			request.updateAttribute(sscFieldId);
+		} catch (BugTrackerException ex) {
+			throw ex;
+		} catch (Exception ex) {
+			throw new BugTrackerException(ex.getMessage(), ex);
 		}
-		return retval;
 	}
 
 	@Override
 	public void addCommentToBug(Bug bug, String comment, UserAuthenticationStore credentials) {
-		LOG.info("Trying to add comment to Bug " + bug.getBugId() + " but not currently supported");
+		LOG.info("addCommentToBug: " + bug.getBugId() + "-" + bug.getBugStatus() + ":" + comment);
+		if(StringUtils.isNotEmpty(comment)) {
+			try {
+				final DimCMClient cmClient = new DimCMClient();
+				cmClient.connect(credentials.getUserName(), credentials.getPassword(), cmDbName, cmDbCon, cmServer);
+				int sscFieldId = cmClient.getFieldId(cmSscCommentsField);
+				Request request = cmClient.getRequest(bug.getBugId());
+				request.queryAttribute(new int[]{SystemAttributes.TITLE, SystemAttributes.DESCRIPTION, sscFieldId});
+				String sscComments = (String) request.getAttribute(sscFieldId);
+				LOG.info("Current comments: " + sscComments);
+				request.setAttribute(sscFieldId, comment);
+				request.updateAttribute(sscFieldId);
+			} catch (BugTrackerException ex) {
+				throw ex;
+			} catch (Exception ex) {
+				throw new BugTrackerException(ex.getMessage(), ex);
+			}
+		}
 	}
 
 	@Override
@@ -390,9 +439,16 @@ public class DimCMBugTrackerPlugin extends AbstractBatchBugTrackerPlugin impleme
 				.setValue(DIMCM_BUG_URL_DEFAULT_VALUE)
 				.setRequired(true);
 
+		BugTrackerConfig cmSscCommentsFieldNameConfig = new BugTrackerConfig()
+				.setIdentifier(DIMCM_SSC_COMMENTS_FIELD_CONFIG_NAME)
+				.setDisplayLabel(DIMCM_SSC_COMMENTS_LABEL)
+				.setDescription(DIMCM_SSC_COMMENTS_DESCRIPTION)
+				.setValue(DIMCM_SSC_COMMENTS_DEFAULT_VALUE)
+				.setRequired(false);
+
 		List<BugTrackerConfig> configs = new ArrayList<>(Arrays.asList(supportedVersions, cmServerConfig, cmDbNameConfig,
 				cmDbConnConfig, cmSuppReqTypeConfig, cmSeverityFieldNameConfig, cmOwnerRoleConfig,
-				cmOwnerCapabilityConfig, cmResolutionFieldNameConfig, cmBugUrlConfig));
+				cmOwnerCapabilityConfig, cmResolutionFieldNameConfig, cmBugUrlConfig, cmSscCommentsFieldNameConfig));
 
 		//configs.addAll(buildSscProxyConfiguration());
 		pluginHelper.populateWithDefaultsIfAvailable(configs);
@@ -440,6 +496,7 @@ public class DimCMBugTrackerPlugin extends AbstractBatchBugTrackerPlugin impleme
 		cmOwnerRoleField = config.get(DIMCM_OWNER_ROLE_CONFIG_NAME);
 		cmResolutionField = config.get(DIMCM_RESOLUTION_FIELD_CONFIG_NAME);
 		cmOwnerCapabilities = config.get(DIMCM_OWNER_CAPABILITIES_CONFIG_NAME);
+		cmSscCommentsField = config.get(DIMCM_SSC_COMMENTS_FIELD_CONFIG_NAME);
 	}
 
 	@Override
@@ -529,17 +586,29 @@ public class DimCMBugTrackerPlugin extends AbstractBatchBugTrackerPlugin impleme
 
 	@Override
 	public Bug fetchBugDetails(String bugId, UserAuthenticationStore credentials) {
-		LOG.info("Trying to fetch Bug " + bugId + " but not currently supported");
-
-		/*final DimCMClient connector = connectToDimensions(credentials);
+		LOG.info("Fetching Bug " + bugId);
+		final DimCMClient connector = new DimCMClient();
+		connector.connect(credentials.getUserName(), credentials.getPassword(), cmDbName, cmDbCon, cmServer);
 		try {
-			LOG.info("Retrieving request " + bugId + " from Dimensions CM");
 			Request request = connector.getRequest(bugId);
-			//return new Bug(String.valueOf(dtoBug.getID()), dtoBug.getStatus(), dtoBug.getResolution());
+			int solutionFieldId = 0;
+			if (!cmResolutionField.isEmpty()) {
+				LOG.info("Retrieving solution field id: " + config.get(DIMCM_RESOLUTION_FIELD_CONFIG_NAME));
+				solutionFieldId = connector.getFieldId(config.get(DIMCM_RESOLUTION_FIELD_CONFIG_NAME));
+			}
+			request.queryAttribute(new int[]{SystemAttributes.TITLE,
+					SystemAttributes.DESCRIPTION,
+					SystemAttributes.OBJECT_SPEC,
+					SystemAttributes.STATUS,
+					solutionFieldId});
+			LOG.info("REQUEST_ID : " + request.getAttribute(SystemAttributes.OBJECT_ID));
+			LOG.info("TITLE     : "  + request.getAttribute(SystemAttributes.TITLE));
+			LOG.info("STATUS    : "  + request.getLcState());
+			LOG.info("SOLUTION  : "  + request.getAttribute(solutionFieldId));
+			return new Bug(bugId, request.getLcState(), (String)request.getAttribute(solutionFieldId));
 		} catch (Exception e) {
 			throw new BugTrackerException("The bug status could not be fetched correctly", e);
-		}*/
-		return null;
+		}
 	}
 
 	private DimCMClient connectToDimensions(final UserAuthenticationStore credentials) {
