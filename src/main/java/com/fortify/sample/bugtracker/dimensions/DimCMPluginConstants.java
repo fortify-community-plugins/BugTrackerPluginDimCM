@@ -69,10 +69,10 @@ final class DimCMPluginConstants {
 	public static final String DIMCM_CLOSED_STATES_DESCRIPTION = "List of request states for a closed request";
 	public static final String DIMCM_CLOSED_STATES_DEFAULT_VALUE = "REJECTED,CLOSED";
 
-	public static final String DIMCM_SSC_COMMENTS_FIELD_CONFIG_NAME = "dimCmSscCommentsField";
-	public static final String DIMCM_SSC_COMMENTS_LABEL = "SSC Comments Field Name";
-	public static final String DIMCM_SSC_COMMENTS_DESCRIPTION = "The field name of a Dimmensions CM text field to updated with SSC comments";
-	public static final String DIMCM_SSC_COMMENTS_DEFAULT_VALUE = "SSC_COMMENTS";
+	public static final String DIMCM_SSC_STATUS_FIELD_CONFIG_NAME = "dimCmSscStatusField";
+	public static final String DIMCM_SSC_STATUS_LABEL = "SSC Status Field Name";
+	public static final String DIMCM_SSC_STATUS_DESCRIPTION = "The field name of a Dimensions CM text field to updated with SSC status";
+	public static final String DIMCM_SSC_STATUS_DEFAULT_VALUE = "SSC_STATUS";
 
 	public static final String DIMCM_USERNAME_CONFIG_NAME = "dimCmUsername";
 	public static final String DIMCM_USERNAME_LABEL = "Dimensions CM User Name";
@@ -116,8 +116,8 @@ final class DimCMPluginConstants {
 	public static final String REQ_TYPE_DESCRIPTION = "Type of Request to create for the Bug";
 
 	public static final String PARTS_PARAM_NAME = "parts";
-	public static final String PARTS_LABEL = "Design Parts";
-	public static final String PARTS_DESCRIPTION = "Name of Design Parts against which bug needs to be logged";
+	public static final String PARTS_LABEL = "Design Part";
+	public static final String PARTS_DESCRIPTION = "Name of Design Part against which bug needs to be logged";
 
 	public static final String SEVERITY_PARAM_NAME = "severity";
 	public static final String SEVERITY_LABEL = "Severity";

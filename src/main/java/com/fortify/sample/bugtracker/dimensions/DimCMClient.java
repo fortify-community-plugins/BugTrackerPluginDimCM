@@ -429,16 +429,7 @@ public class DimCMClient {
     public static void main(final String[] args) {
 
         DimCMClient cmClient = new DimCMClient();
-        cmClient.connect("dmsys", "Pa55w0rd", "cm_typical", "dimcm", "localhost");
-        int sscFieldId = cmClient.getFieldId("SSC_COMMENTS");
-        Request request = (Request) cmClient.getRequest("QLARIUS_TASK_21");
-        request.queryAttribute(new int[]{SystemAttributes.TITLE, SystemAttributes.DESCRIPTION, sscFieldId});
-        String sscComments = (String)request.getAttribute(SystemAttributes.DESCRIPTION);
-        System.out.println(sscComments);
-        String newComments = "I have been updated\n" + sscComments;
-        request.setAttribute(SystemAttributes.DESCRIPTION, newComments);
-        request.updateAttribute(SystemAttributes.DESCRIPTION);
-        System.exit(0);
+        cmClient.connect("dmsys", "", "cm_typical", "dimcm", "localhost");
         System.out.println(cmClient.getProjectsStreams("QLARIUS"));
         System.out.println(cmClient.getDesignParts("QLARIUS"));
         List <Part> parts = cmClient.getDesignPartAsList("QLARIUS", "QLARIUS:WEBSITE.A;1");
