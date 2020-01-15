@@ -621,7 +621,7 @@ public class DimCMBugTrackerPlugin extends AbstractBatchBugTrackerPlugin impleme
 	}
 
 	private DimCMClient connectToDimensions(final UserAuthenticationStore credentials) {
-		DimCMClient cmClient;
+		DimCMClient cmClient = new DimCMClient();
 		try {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Connecting to Dimensions CM:");
@@ -630,7 +630,7 @@ public class DimCMBugTrackerPlugin extends AbstractBatchBugTrackerPlugin impleme
 				LOG.debug("Database Connection: " + cmDbCon);
 				LOG.debug("User: " + credentials.getUserName());
 			}
-			cmClient = connectToDimensions(credentials);
+			cmClient.connect(credentials.getUserName(), credentials.getPassword(), cmDbName, cmDbCon, cmServer);
 			LOG.info("Connected to Dimensions CM successfully");
 		} catch (Exception ex) {
 			LOG.error("Unable to connection to Dimensions CM: " + ex.toString());
