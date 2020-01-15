@@ -22,6 +22,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.fortify.sample.bugtracker.dimensions.DimCMPluginConstants.DIMCM_SEVERITY_FIELD_CONFIG_NAME;
+
 public class DimCMClient {
     private static final Log LOG = LogFactory.getLog(DimCMClient.class);
 
@@ -188,13 +190,17 @@ public class DimCMClient {
         List<AttributeDefinition> attributeDefinitions = factory.getBaseDatabase().getAttributeDefinitions(Request.class, AttributeType.SFSV);
 
         List<String> res = new ArrayList<String>();
+
         for (AttributeDefinition attr : attributeDefinitions) {
             if (attr.getName().equals(fieldName.toUpperCase())) {
                 ValidSet validSet = attr.getValidSet();
-                List<ValidSetRowDetails> values = validSet.getValues();
-                for (ValidSetRowDetails v : values) {
-                    res.add(v.getColumnValue(0));
+                if (validSet != null) {
+                    List<ValidSetRowDetails> values = validSet.getValues();
+                    for (ValidSetRowDetails v : values) {
+                        res.add(v.getColumnValue(0));
+                    }
                 }
+                return res;
             }
         }
 
@@ -429,7 +435,7 @@ public class DimCMClient {
     public static void main(final String[] args) {
 
         DimCMClient cmClient = new DimCMClient();
-        cmClient.connect("dmsys", "", "cm_typical", "dimcm", "localhost");
+        cmClient.connect("security", "security", "cm_typical", "dimcm", "localhost");
         System.out.println(cmClient.getProjectsStreams("QLARIUS"));
         System.out.println(cmClient.getDesignParts("QLARIUS"));
         List <Part> parts = cmClient.getDesignPartAsList("QLARIUS", "QLARIUS:WEBSITE.A;1");
