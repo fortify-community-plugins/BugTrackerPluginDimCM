@@ -232,7 +232,9 @@ public class DimCMClient {
         for (Object roleAssignment : roleAssignments) {
             RoleAssignmentDetails rad = (RoleAssignmentDetails) roleAssignment;
             if (rad.getRoleName().equals(roleName.toUpperCase())) {
-                res.add(rad.getUserName());
+				if (!res.contains(rad.getUserName())) {
+					res.add(rad.getUserName());
+				}
             }
         }
 

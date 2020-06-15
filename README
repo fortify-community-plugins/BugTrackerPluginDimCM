@@ -39,16 +39,17 @@ Building the sample extension requires JDK 1.8 and Gradle 4.x to be installed on
 BUILDING
 -------------
 
-To build the Dimenions CM bug tracker sample, simply run from the sample root directory:
+To build the Dimenions CM bug tracker sample, simply run from the plugin's root directory:
 
   > gradle clean build
 
 If you have not changed anything a new
+
     "com.fortify.sample.bugtracker.dimensions.DimCMBugTrackerPlugin-xx.yy.jar"
-should be generated in sample's ../dist folder as a result.
+	
+should be generated in plugin's ../dist folder as a result.
 
 For more information how to implement plugin see plugin's interface JavaDoc and SSC documentation.
-Bug tracker plugin public interface is distributed in sample's ../lib/fortify-public-[version].jar library.
 
 
 -----------------
@@ -134,9 +135,9 @@ USING
 1) Edit your application version profile within Software Security Center and configure/enable bug tracker plugin
    integration. You can specify the "Bug URL Deep Link" as a Dimensions Pulse or Web URL link - the values %DBNAME%, %DBNAME%
    and %BUG_ID% will be replaced with actuals values at submission time.
-2) Create a Bug Filing Template for submission (in Administration->Templates->Bug Filing) - you can copy the JIRA template
-   as an example but name the fields "Title" and "Description".
-3) Add an additional field to your Dimensions CM (nominally called "SSC_STATUS") to hold information and updates from
+2) Create a Bug Filing Template for submission (in Administration->Templates->Bug Filing) - you can copy the JIRA template "Summary"
+   and "Description" fields as an example but rename the field "Summary" to "Title".
+3) Add an additional field to your Dimensions CM process model(nominally called "SSC_STATUS") to hold information and updates from
    SSC if issues are resolved or need to be reopened.
 
 Then you can start directly filing issues from this application version as bugs to the Dimensions CM provider.

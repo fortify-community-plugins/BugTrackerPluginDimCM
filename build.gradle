@@ -4,7 +4,7 @@ apply plugin: 'java'
 apply plugin: 'osgi'
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
-version = '19.2.0.3173'
+version = '20.1.0.0151'
 
 configurations {
     bundle
